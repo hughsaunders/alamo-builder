@@ -246,7 +246,7 @@ function install_git(){
 }
 
 function setup_chef_validation_key_distribution_service(){
-  apt-get install -y xinted 1>&9
+  apt-get install -y xinetd 1>&9
   cat > /etc/xinetd.d/chefgetvalidation <<END_XINTED_CONFIG
 service chefgetvalidation
 {
