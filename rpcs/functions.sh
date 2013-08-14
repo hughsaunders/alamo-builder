@@ -1,5 +1,6 @@
 date_string="%a, %d %b %Y %X %z"
 git_string=""
+knife=/opt/chef-server/bin/knife
 
 # return the integer part of a float
 function get_float() {
@@ -162,19 +163,25 @@ function run_twice() {
     fi
 }
 
-function install_chef() {
+function install_chef_client() {
     # Make it so
-    echo chef chef/chef_server_url string http://$chef:4000 | debconf-set-selections
+    #echo chef chef/chef_server_url string https://$chef:443 | debconf-set-selections
     mkdir -p /etc/chef
-    if [ ! -e /opt/rpcs/chef-full.deb ]; then
-        run_twice curl -L http://opscode.com/chef/install.sh | bash 1>&9
-    else
-        dpkg -i /opt/rpcs/chef-full.deb 1>&9
-    fi
-    cat >> /etc/chef/client.rb <<EOF
-    chef_server_url "http://${chef}:4000"
-    environment "rpcs"
-EOF
+
+    CLIENT_VERSION=${CLIENT_VERSION:-"11.2.0-1"}
+    CHEF_URL=${CHEF_URL:-https://$chef:443}
+    ENVIRONMENT=${ENVIRONMENT:-rpcs}
+
+    sudo apt-get install -y curl
+    curl -skS -L http://www.opscode.com/chef/install.sh | bash -s - -v ${CLIENT_VERSION} 1>&9
+    mkdir -p /etc/chef
+
+    #chef-client config file
+    cat <<EOF2 > /etc/chef/client.rb
+Ohai::Config[:disabled_plugins] = ["passwd"]
+chef_server_url "${CHEF_URL}"
+chef_environment "${ENVIRONMENT}"
+EOF2
 }
 
 function disable_virbr0 {
@@ -355,7 +362,41 @@ EOF
 
     do_substatus_close
 }
+function install_git(){
+    apt-get install -y git 1>&9
+}
 
+function setup_chef_validation_key_distribution_service(){
+  apt-get install -y xinted 1>&9
+  cat > /etc/xinetd.d/chefgetvalidation <<END_XINTED_CONFIG
+service chefgetvalidation
+{
+  disable           = no
+  socket_type       = stream
+  type              = UNLISTED
+  protocol          = tcp
+  port              = 7777
+  wait              = no
+  user              = root
+  server            = /bin/cat
+  server_args       = /etc/chef-server/chef-validator.pem
+}
+END_XINTED_CONFIG
+}
+
+
+function get_chef_configuration_scripts(){
+  git $git_string checkout http://github.com/rcbops/support-tools -b v4_iso /opt/rpcs/support-tools
+  pushd /opt/rpcs/support-tools
+    git checkout iso
+  popd
+}
+
+function install_chef_server(){
+  pushd /opt/rcps/support-tools/chef-install
+    bash ./install-chef-server.sh
+  popd
+}
 function port_test() { # $1 delay, $2 max, $3 host, $4 port
     local count=1
     while (( $count <= $2 )); do
@@ -383,11 +424,12 @@ EOF
     sshpass -p demo ssh-copy-id -i .ssh/id_rsa.pub rack@$chef 1>&9
 
     do_substatus 30 "Setting new password ..." "ssh-keys"
-    ssh rack@$chef "sudo chpasswd" <<< "rack:$(pwgen -s 12 1)"
+    ssh rack@$chef '"sudo chpasswd" <<< "rack:'$(pwgen -s 12 1)'"'
 }
 
 function drop_knife_config {
     # Reregister chef clients and snag keys for local use
+    cd
     mkdir -p .chef
     cat > .chef/knife.rb << EOF
 log_level                :info
@@ -396,7 +438,7 @@ node_name                '$fqdn'
 client_key               '/etc/chef/client.pem'
 validation_client_name   'chef-validator'
 validation_key           '/etc/chef/validation.pem'
-chef_server_url          'http://${chef}:4000'
+chef_server_url          'https://${chef}:443'
 cache_type               'BasicFile'
 cache_options( :path => '/etc/chef/checksums' )
 cookbook_path            '/opt/rpcs/chef-cookbooks/cookbooks'
@@ -404,7 +446,8 @@ EOF
 }
 
 function generate_chef_keys {
-    ssh rack@$chef "sudo sh -c 'cat > /usr/share/chef-server-api/public/rpcs.cfg'; knife client reregister rack -f .chef/rack.pem; knife client reregister chef-validator -f .chef/validation.pem; sudo cp .chef/validation.pem /usr/share/chef-server-api/public; sudo chmod +r /usr/share/chef-server-api/public/*; yes | knife client delete $fqdn &> /dev/null; knife environment create -d rpcs &>/dev/null; knife client create $fqdn -d -a" < /opt/rpcs/rpcs.cfg | tail -n+2 > /etc/chef/client.pem
+    knife environment create -d rpcs &>/dev/null
+    knife client create $fqdn -d -a |tail -n+2 >  /etc/chef/client.pem
 }
 
 function initialize_submodules() {
@@ -436,7 +479,6 @@ function update_submodules() {
 
 function download_cookbooks {
     # grab cookbooks
-    apt-get install -y git 1>&9
 
     set_git_proxy
 
@@ -444,7 +486,7 @@ function download_cookbooks {
     if [ ! -e /opt/rpcs/chef-cookbooks ]; then
         run_twice git ${git_string} clone http://github.com/rcbops/chef-cookbooks /opt/rpcs/chef-cookbooks 1>&9
         cd /opt/rpcs/chef-cookbooks
-        run_twice git ${git_string} checkout iso 1>&9
+        run_twice git ${git_string} checkout v4.1.0 1>&9
 
         run_twice "initialize_submodules"
 
@@ -487,7 +529,7 @@ function upload_cookbooks_to_chef() {
 
 function get_validation_pem() {
     echo "Grabbing validation.pem from chef-server ..."
-    wget --no-proxy -nv http://${chef}:4000/validation.pem -O /etc/chef/validation.pem
+    nc $chef 7777 > /etc/chef/validation.pem
 }
 
 function commafy {

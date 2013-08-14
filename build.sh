@@ -45,9 +45,6 @@ EOF
 PRIDE="${CODENAME}-v${MAJORVER}-${MINORVER}"
 UDEB_NAME="rpcs-pre rpcs-post kvmcheck proxy-check eula"
 
-CHEF_IMAGE_NAME="chef-server.qcow2"
-CHEF_IMAGE_HOST=${CHEF_IMAGE_HOST:-c390813.r13.cf1.rackcdn.com}
-CHEF_IMAGE_URL="http://${CHEF_IMAGE_HOST}/${CHEF_IMAGE_NAME}"
 ISO_URL="http://releases.ubuntu.com/precise/ubuntu-12.04.1-server-amd64.iso"
 ISO_MD5="a8c667e871f48f3a662f3fbf1c3ddb17"
 ISO_CUSTOM="rpcs-pridery.iso"
@@ -89,16 +86,8 @@ mkdir -p "$FOLDER_ISO_CUSTOM"
 mkdir -p "$FOLDER_ISO_INITRD"
 
 ISO_FILENAME="${FOLDER_RESOURCES}/$(basename $ISO_URL)"
-CHEF_FILENAME="${FOLDER_RESOURCES}/${CHEF_IMAGE_NAME}"
-CHEF_DEB_FILENAME="${FOLDER_RESOURCES}/chef-full.deb"
 PRECISE_FILENAME="${FOLDER_RESOURCES}/${PRECISE_IMAGE_NAME}"
 CIRROS_FILENAME="${FOLDER_RESOURCES}/${CIRROS_IMAGE_NAME}"
-
-# download the chef-server image
-if [ ! -e "${CHEF_FILENAME}.pristine" ] && [ "${FLAVOR}" = "FULL" ]; then
-  echo "Downloading ${CHEF_IMAGE_URL} ..."
-  curl --output "${CHEF_FILENAME}.pristine" -L "${CHEF_IMAGE_URL}"
-fi
 
 if [ ! -e "${PRECISE_FILENAME}" ] && [ "${FLAVOR}" = "FULL" ]; then
   echo "Downloading Precise Image ..."
@@ -108,12 +97,6 @@ fi
 if [ ! -e "${CIRROS_FILENAME}" ] && [ "${FLAVOR}" = "FULL" ]; then
   echo "Downloading Cirros Image ..."
   curl --output "${CIRROS_FILENAME}" -L "${CIRROS_URL}"
-fi
-
-# download the Chef Omnibus installer
-if [ ! -e "${CHEF_DEB_FILENAME}" ] && [ "${FLAVOR}" = "FULL" ]; then
-  echo "Downloading Chef Omnibus ..."
-  curl --output "${CHEF_DEB_FILENAME}" -L http://s3.amazonaws.com/opscode-full-stack/ubuntu-11.04-x86_64/chef-full_10.12.0-1_amd64.deb
 fi
 
 # download the installation disk if we haven't already or it is corrupted somehow
@@ -177,10 +160,6 @@ mkdir -p "$FOLDER_ISO_CUSTOM_RPCS"
 
 mkdir -p "$FOLDER_ISO_CUSTOM_RPCS/resources"
 # move over the chef-server.qcow2
-if [ -e "${CHEF_FILENAME}.pristine" ] && [ "${FLAVOR}" = "FULL" ]; then
-    echo "Embedding the chef-server image ..."
-    cp "${CHEF_FILENAME}.pristine" "${FOLDER_ISO_CUSTOM_RPCS}/resources/"
-fi
 
 if [ -e "${PRECISE_FILENAME}" ] && [ "${FLAVOR}" = "FULL" ]; then
     echo "Embedding the precise image ..."
@@ -198,11 +177,6 @@ else
     echo "cirros_url=\"$CIRROS_URL\"" >> ${FOLDER_ISO_CUSTOM_RPCS}/rpcs.cfg
 fi
 
-# and the chef installer
-if [ -e "${CHEF_DEB_FILENAME}" ] && [ "${FLAVOR}" = "FULL" ]; then
-    echo "Embedding the Chef Omnibus installer ..."
-    cp "${CHEF_DEB_FILENAME}" "${FOLDER_ISO_CUSTOM_RPCS}/resources/"
-fi
 
 # add some files
 echo "Add extra files ..."
