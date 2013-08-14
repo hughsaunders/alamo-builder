@@ -265,14 +265,16 @@ END_XINTED_CONFIG
 
 
 function get_chef_configuration_scripts(){
-  git $git_string checkout http://github.com/rcbops/support-tools -b v4_iso /opt/rpcs/support-tools
+  dir=/opt/rpcs/support-tools
+  [ -d $dir ] && rm -rf $dir
+  git $git_string clone http://github.com/rcbops/support-tools -b v4_iso $dir
   pushd /opt/rpcs/support-tools
     git checkout iso
   popd
 }
 
 function install_chef_server(){
-  pushd /opt/rcps/support-tools/chef-install
+  pushd /opt/rpcs/support-tools/chef-install
     bash ./install-chef-server.sh
   popd
 }
@@ -290,8 +292,7 @@ function port_test() { # $1 delay, $2 max, $3 host, $4 port
 }
 
 function drop_knife_config {
-    # Reregister chef clients and snag keys for local use
-    cd
+    pushd /root
     mkdir -p .chef
     cat > .chef/knife.rb << EOF
 log_level                :info
@@ -305,6 +306,7 @@ cache_type               'BasicFile'
 cache_options( :path => '/etc/chef/checksums' )
 cookbook_path            '/opt/rpcs/chef-cookbooks/cookbooks'
 EOF
+  popd
 }
 
 function generate_chef_keys {
