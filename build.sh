@@ -45,8 +45,8 @@ EOF
 PRIDE="${CODENAME}-v${MAJORVER}-${MINORVER}"
 UDEB_NAME="rpcs-pre rpcs-post kvmcheck proxy-check eula"
 
-ISO_URL="http://releases.ubuntu.com/precise/ubuntu-12.04.1-server-amd64.iso"
-ISO_MD5="a8c667e871f48f3a662f3fbf1c3ddb17"
+ISO_URL="http://releases.ubuntu.com/precise/ubuntu-12.04.2-server-amd64.iso"
+ISO_MD5="af5f788aee1b32c4b2634734309cc9e9"
 ISO_CUSTOM="rpcs-pridery.iso"
 CIRROS_IMAGE_NAME="cirros-0.3.0-x86_64-uec.tar.gz"
 CIRROS_URL="https://launchpadlibrarian.net/83305869/${CIRROS_IMAGE_NAME}"
