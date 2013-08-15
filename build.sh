@@ -181,7 +181,7 @@ fi
 # add some files
 echo "Add extra files ..."
 chmod u+w "$FOLDER_ISO_CUSTOM"
-cp "${FOLDER_BASE}/rpcs/functions.sh" "$FOLDER_ISO_CUSTOM_RPCS/
+cp "${FOLDER_BASE}/rpcs/functions.sh" "$FOLDER_ISO_CUSTOM_RPCS/"
 cp "${FOLDER_BASE}/rpcs/late_command.sh" "$FOLDER_ISO_CUSTOM_RPCS/"
 cp "${FOLDER_BASE}/rpcs/post-install.sh" "$FOLDER_ISO_CUSTOM_RPCS/post-install.sh"
 cp "${FOLDER_BASE}/rpcs/status.sh" "$FOLDER_ISO_CUSTOM_RPCS/"
