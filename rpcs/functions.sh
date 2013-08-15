@@ -113,7 +113,7 @@ function do_exit() {
             # do_substatus 20 "Destroying the chef-server" "error"
             # virsh destroy chef-server
             # virsh undefine chef-server
-            rm -f /opt/rpcs/chef-server.qcow2
+            # rm -f /opt/rpcs/chef-server.qcow2
             rm -rf /opt/rpcs/chef-cookbooks
             do_substatus 30 "Uninstalling mysql" "error"
             apt-get -y purge `dpkg -l | grep mysql | awk '{print $2}'`
@@ -311,8 +311,11 @@ EOF
 }
 
 function generate_chef_keys {
+    # Need to use validation key directly from /etc/chef-server on controller
+    sed -i '/validation_key/s+/etc/chef/validation.pem+/etc/chef-server/chef-validator.pem+' ~/.chef/knife.rb
+    chef-client
     $knife environment create -d rpcs &>/dev/null
-    $knife client create $fqdn -d -a |tail -n+2 >  /etc/chef/client.pem
+    #$knife client create $fqdn -d -a |tail -n+2 >  /etc/chef/client.pem
 }
 
 function initialize_submodules() {
@@ -499,22 +502,21 @@ EOF
 
 
 function assign_roles() {
-    if [ $role = "All-In-One" ]; then
-        knife node run_list add $fqdn "role[single-controller]"
-        knife node run_list add $fqdn "role[single-compute]"
-        knife node run_list add $fqdn "role[collectd-client]"
+    # All nodes get these roles
+    knife node run_list add $fqdn "role[collectd-client]"
+
+    # Role specific, errr roles.
+    case $role in
+      All-In-One|Controller)
+        knife node run_list add $fqdn "role[ha-controller1]"
         knife node run_list add $fqdn "role[collectd-server]"
         knife node run_list add $fqdn "role[graphite]"
-    else
-        knife node run_list add $fqdn "role[single-${role,,}]"
-        knife node run_list add $fqdn "role[collectd-client]"
-        if [ $role = "Controller" ]; then
-            knife node run_list add $fqdn "role[collectd-server]"
-            knife node run_list add $fqdn "role[graphite]"
-        fi
-    fi
+      ;;
+      All-In-One|Compute)
+        knife node run_list add $fqdn "role[single-compute]"
+      ;;
+    esac
 }
-
 
 function run_chef() {
     set -o pipefail
