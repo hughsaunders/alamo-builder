@@ -311,12 +311,17 @@ EOF
 }
 
 function generate_chef_keys {
-    # Need to use validation key directly from /etc/chef-server on controller
-    #sed -i '/validation_key/s+/etc/chef/validation.pem+/etc/chef-server/chef-validator.pem+' ~/.chef/knife.rb
-    [ -e /etc/chef/validation.pem ] || ln -s /etc/chef-server/chef-validator.pem /etc/chef/validation.pem
-    chef-client
-    $knife environment create -d rpcs &>/dev/null
-    #$knife client create $fqdn -d -a |tail -n+2 >  /etc/chef/client.pem
+    # Admin creds for creating new clients and environments.
+    knife_admin="--user admin --key /etc/chef-server/admin.pem"
+
+    # Delete existing client
+    $knife client list $knife_admin|grep -q $fqdn \
+      && $knife client delete $fqdn $knife_admin||true
+
+    # Create new admin client, and environment
+    $knife client create $fqdn $knife_admin > /etc/chef/client.pem
+    $knife environment list |grep -q rpcs \
+      ||$knife environment create -d rpcs &>/dev/null
 }
 
 function initialize_submodules() {
