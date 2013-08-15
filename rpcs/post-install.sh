@@ -104,8 +104,8 @@ if [ $role = "Controller" ] || [ $role = "All-In-One" ]; then
 
     do_status 70 "Waiting for API server to start"
     port_test 30 20 localhost 8000
-    port_test 30 20 $chef 443
-    port_test 30 20 $chef 7777
+    port_test 30 20 localhost 443
+    port_test 30 20 localhost 7777
 
     do_status 72 "Generating chef-client keys"
     generate_chef_keys

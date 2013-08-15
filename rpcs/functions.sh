@@ -261,6 +261,7 @@ service chefgetvalidation
   server_args       = /etc/chef-server/chef-validator.pem
 }
 END_XINTED_CONFIG
+stop xinetd; start xinetd
 }
 
 
@@ -310,8 +311,8 @@ EOF
 }
 
 function generate_chef_keys {
-    knife environment create -d rpcs &>/dev/null
-    knife client create $fqdn -d -a |tail -n+2 >  /etc/chef/client.pem
+    $knife environment create -d rpcs &>/dev/null
+    $knife client create $fqdn -d -a |tail -n+2 >  /etc/chef/client.pem
 }
 
 function initialize_submodules() {
