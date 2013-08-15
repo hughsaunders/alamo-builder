@@ -35,7 +35,7 @@ cd /root
 
 # Set some handy variables
 if [ $role = "Controller" ] || [ $role = "All-In-One" ]; then
-    chef=169.254.123.2
+    chef=127.0.0.1
 else
     chef=$net_con_ip
 fi

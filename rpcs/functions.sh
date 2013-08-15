@@ -25,7 +25,7 @@ function set_git_proxy() {
 function set_chef_proxy() {
     if [ -n "${http_proxy}" ]; then
         echo "http_proxy \"${http_proxy}\"" >> /etc/chef/client.rb
-        echo "no_proxy \"169.254.*\"" >> /etc/chef/client.rb
+        #echo "no_proxy \"169.254.*\"" >> /etc/chef/client.rb
     fi
 }
 
@@ -227,9 +227,9 @@ function setup_iptables {
     sysctl -p /etc/sysctl.conf 1>&9
 
     # Add iptables rule...
-    if ! iptables -t nat -nvL PREROUTING | grep -q 4000; then
-        iptables -t nat -A PREROUTING -s $net_mgmt -p tcp --dport 4000 -j DNAT --to-dest 169.254.123.2
-    fi
+#    if ! iptables -t nat -nvL PREROUTING | grep -q 4000; then
+#        iptables -t nat -A PREROUTING -s $net_mgmt -p tcp --dport 4000 -j DNAT --to-dest 169.254.123.2
+#    fi
 
     if ! iptables -t nat -nvL POSTROUTING | grep -q MASQUERADE; then
         iptables -t nat -A POSTROUTING -o $net_public_iface -j MASQUERADE
@@ -312,7 +312,8 @@ EOF
 
 function generate_chef_keys {
     # Need to use validation key directly from /etc/chef-server on controller
-    sed -i '/validation_key/s+/etc/chef/validation.pem+/etc/chef-server/chef-validator.pem+' ~/.chef/knife.rb
+    #sed -i '/validation_key/s+/etc/chef/validation.pem+/etc/chef-server/chef-validator.pem+' ~/.chef/knife.rb
+    ln -s /etc/chef-server/chef-validator.pem /etc/chef/validation.pem
     chef-client
     $knife environment create -d rpcs &>/dev/null
     #$knife client create $fqdn -d -a |tail -n+2 >  /etc/chef/client.pem
