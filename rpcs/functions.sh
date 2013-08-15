@@ -313,7 +313,7 @@ EOF
 function generate_chef_keys {
     # Need to use validation key directly from /etc/chef-server on controller
     #sed -i '/validation_key/s+/etc/chef/validation.pem+/etc/chef-server/chef-validator.pem+' ~/.chef/knife.rb
-    ln -s /etc/chef-server/chef-validator.pem /etc/chef/validation.pem
+    [ -e /etc/chef/validation.pem ] || ln -s /etc/chef-server/chef-validator.pem /etc/chef/validation.pem
     chef-client
     $knife environment create -d rpcs &>/dev/null
     #$knife client create $fqdn -d -a |tail -n+2 >  /etc/chef/client.pem
