@@ -109,10 +109,10 @@ function do_exit() {
         if [ $role = "Controller" ] || [ $role = "All-In-One" ]; then
             # on failure remove all the bits from the controller
             rm -rf /root/.ssh
-            rm -rf /opt/rpcs/chef-server.xml
-            do_substatus 20 "Destroying the chef-server" "error"
-            virsh destroy chef-server
-            virsh undefine chef-server
+            # rm -rf /opt/rpcs/chef-server.xml
+            # do_substatus 20 "Destroying the chef-server" "error"
+            # virsh destroy chef-server
+            # virsh undefine chef-server
             rm -f /opt/rpcs/chef-server.qcow2
             rm -rf /opt/rpcs/chef-cookbooks
             do_substatus 30 "Uninstalling mysql" "error"
