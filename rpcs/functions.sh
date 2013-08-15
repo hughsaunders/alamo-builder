@@ -316,7 +316,7 @@ function generate_chef_keys {
 
     # Delete existing client
     $knife client list $knife_admin|grep -q $fqdn \
-      && $knife client delete $fqdn $knife_admin||true
+      && $knife client delete $fqdn -y $knife_admin||true
 
     # Create new admin client, and environment
     $knife client create $fqdn $knife_admin > /etc/chef/client.pem
