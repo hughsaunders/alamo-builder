@@ -319,7 +319,7 @@ function generate_chef_keys {
       && $knife client delete $fqdn -y $knife_admin||true
 
     # Create new admin client, and environment
-    $knife client create $fqdn $knife_admin > /etc/chef/client.pem
+    $knife client create $fqdn -d -a $knife_admin > /etc/chef/client.pem
     $knife environment list |grep -q rpcs \
       ||$knife environment create -d rpcs &>/dev/null
 }
