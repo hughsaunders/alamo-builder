@@ -93,19 +93,34 @@ if [ $role = "Controller" ] || [ $role = "All-In-One" ]; then
     do_status 20 "Installing Git"
     install_git
 
-    do_status 21 "Geting Chef Server configuration scripts"
+    do_status 21 "Installing RabbitMQ"
+    install_rabbit_mq
+
+    do_status 30 "Waiting for RabbitMQ to come up"
+    wait_for_rabbit
+
+    do_status 31 "Configuring RabbitMQ for chef"
+    export CHEF_RMQ_PW="$(pwgen 16)"
+    configure_rabbit_for_chef "$CHEF_RMQ_PW"
+
+    do_status 32 "Geting Chef Server configuration scripts"
     get_chef_configuration_scripts
 
-    do_status 22 "Installing Chef Server"
+    do_status 35 "Installing Chef Server"
     install_chef_server
 
-    do_status 30 "Setting up chef validation key distribution sevice"
+    do_status 50 "Configuring Chef to use ext RabbitMQ"
+    configure_chef_for_ext_rabbit "$CHEF_RMQ_PW"
+
+    do_status 51 "Setting up chef validation key distribution sevice"
     setup_chef_validation_key_distribution_service
 
+    do_status 52 "Wait for key distribution service"
+    wait_for_key_distribution_service
+
     do_status 70 "Waiting for API server to start"
-    port_test 30 20 localhost 8000
-    port_test 30 20 localhost 443
-    port_test 30 20 localhost 7777
+    port_test 30 20 localhost 4000
+    port_test 30 20 localhost 4080
 
     do_status 72 "Generating chef-client keys"
     generate_chef_keys

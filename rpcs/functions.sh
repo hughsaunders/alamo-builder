@@ -2,6 +2,13 @@ date_string="%a, %d %b %Y %X %z"
 git_string=""
 knife=/opt/chef-server/bin/knife
 
+
+function pwgen() {
+    local length=${1:-8}
+    tr -dc A-Za-z0-9_ < /dev/urandom | head -c ${length}
+    echo # append \n
+}
+
 # return the integer part of a float
 function get_float() {
   local numerator=$1
@@ -169,7 +176,7 @@ function install_chef_client() {
     mkdir -p /etc/chef
 
     CLIENT_VERSION=${CLIENT_VERSION:-"11.2.0-1"}
-    CHEF_URL=${CHEF_URL:-https://$chef:443}
+    CHEF_URL=${CHEF_URL:-https://$chef:4000}
     ENVIRONMENT=${ENVIRONMENT:-rpcs}
 
     sudo apt-get install -y curl
@@ -264,6 +271,25 @@ END_XINTED_CONFIG
 stop xinetd; start xinetd
 }
 
+function wait_for_key_distribution_service(){
+    port_test 30 20 localhost 7777
+}
+
+function install_rabbit_mq(){
+  apt-get install -y rabbitmq-server
+  /etc/init.d/rabbitmq-server restart
+}
+
+function wait_for_rabbit(){
+  port_test 30 20 localhost 5672
+}
+
+function configure_rabbit_for_chef(){
+  CHEF_RMQ_PW="$1"
+  rabbitmqctl add_vhost /chef
+  rabbitmqctl add_user chef $CHEF_RMQ_PW
+  rabbitmqctl set_permissions -p /chef chef '.*' '.*' '.*'
+}
 
 function get_chef_configuration_scripts(){
   dir=/opt/rpcs/support-tools
@@ -279,6 +305,31 @@ function install_chef_server(){
     bash ./install-chef-server.sh
   popd
 }
+
+function configure_chef_for_ext_rabbit(){
+  CHEF_RMQ_PW="$1"
+  # Change rabbit password in chef JSON secrets file.
+  python <<EOP
+import json
+path="/etc/chef-server/chef-server-secrets.json"
+hash=json.load(open(path))
+hash["rabbitmq"]["password"]="$CHEF_RMQ_PW"
+open(path,"w").writelines(
+  json.dumps(hash,sort_keys=True,indent=4, separators=(",", ": "))
+)
+EOP
+
+  cat > /etc/chef-server/chef-server.rb <<EOF
+nginx["ssl_port"] = 4000
+nginx["non_ssl_port"] = 4080
+nginx["enable_non_ssl"] = true
+rabbitmq["enable"] = false
+rabbitmq["password"] = "$CHEF_RMQ_PW"
+bookshelf['url'] = "https://#{node['ipaddress']}:4000"
+EOF
+  chef-server-ctl reconfigure
+}
+
 function port_test() { # $1 delay, $2 max, $3 host, $4 port
     local count=1
     while (( $count <= $2 )); do
@@ -302,7 +353,7 @@ node_name                '$fqdn'
 client_key               '/etc/chef/client.pem'
 validation_client_name   'chef-validator'
 validation_key           '/etc/chef/validation.pem'
-chef_server_url          'https://${chef}:443'
+chef_server_url          'https://${chef}:4000'
 cache_type               'BasicFile'
 cache_options( :path => '/etc/chef/checksums' )
 cookbook_path            '/opt/rpcs/chef-cookbooks/cookbooks'
