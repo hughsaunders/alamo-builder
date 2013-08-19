@@ -299,7 +299,8 @@ function configure_rabbit_for_chef(){
 
 function install_chef_server(){
   CHEF_RMQ_PW="$1"
-  dpkg -i /opt/rpcs/chef-server.deb
+  dpkg -l chef-server |grep -q ^ii \
+    || dpkg -i /opt/rpcs/chef-server.deb
 
   mkdir -p /etc/chef-server
 
