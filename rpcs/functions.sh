@@ -291,23 +291,10 @@ function configure_rabbit_for_chef(){
   rabbitmqctl set_permissions -p /chef chef '.*' '.*' '.*'
 }
 
-function get_chef_configuration_scripts(){
-  dir=/opt/rpcs/support-tools
-  [ -d $dir ] && rm -rf $dir
-  git $git_string clone http://github.com/rcbops/support-tools -b v4_iso $dir
-  pushd /opt/rpcs/support-tools
-    git checkout iso
-  popd
-}
-
 function install_chef_server(){
-  pushd /opt/rpcs/support-tools/chef-install
-    bash ./install-chef-server.sh
-  popd
-}
-
-function configure_chef_for_ext_rabbit(){
   CHEF_RMQ_PW="$1"
+  dpkg -i /opt/rpcs/chef-server.deb
+
   # Change rabbit password in chef JSON secrets file.
   python <<EOP
 import json
@@ -327,6 +314,8 @@ rabbitmq["enable"] = false
 rabbitmq["password"] = "$CHEF_RMQ_PW"
 bookshelf['url'] = "https://#{node['ipaddress']}:4000"
 EOF
+
+  # Run chef-solo to configure chef server
   chef-server-ctl reconfigure
 }
 

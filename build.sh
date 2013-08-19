@@ -52,6 +52,8 @@ CIRROS_IMAGE_NAME="cirros-0.3.0-x86_64-uec.tar.gz"
 CIRROS_URL="https://launchpadlibrarian.net/83305869/${CIRROS_IMAGE_NAME}"
 PRECISE_IMAGE_NAME="precise-server-cloudimg-amd64.tar.gz"
 PRECISE_URL="http://cloud-images.ubuntu.com/precise/current/${PRECISE_IMAGE_NAME}"
+CHEF_SERVER_DEB_URL="http://www.opscode.com/chef/download-server?p=ubuntu&pv=12.04&m=x86_64"
+CHEF_SERVER_DEB_NAME="chef-server.deb"
 
 # location, location, location
 FOLDER_BASE=$(pwd)
@@ -88,16 +90,21 @@ mkdir -p "$FOLDER_ISO_INITRD"
 ISO_FILENAME="${FOLDER_RESOURCES}/$(basename $ISO_URL)"
 PRECISE_FILENAME="${FOLDER_RESOURCES}/${PRECISE_IMAGE_NAME}"
 CIRROS_FILENAME="${FOLDER_RESOURCES}/${CIRROS_IMAGE_NAME}"
+CHEF_SERVER_DEB_FILENAME="${FOLDER_RESOURCES}/${CHEF_SERVER_DEB_NAME}"
 
-if [ ! -e "${PRECISE_FILENAME}" ] && [ "${FLAVOR}" = "FULL" ]; then
-  echo "Downloading Precise Image ..."
-  curl --output "${PRECISE_FILENAME}" -L "${PRECISE_URL}"
-fi
+download(){
+  URL="$1"
+  FILENAME="$2"
+  if [ ! -e "$FILENAME" ] && [ "${FLAVOR}" = "FULL" ]; then
+    echo "Downloading $FILENAME ..."
+    curl --output "${FILENAME}" -L "${URL}"
+  fi
+}
 
-if [ ! -e "${CIRROS_FILENAME}" ] && [ "${FLAVOR}" = "FULL" ]; then
-  echo "Downloading Cirros Image ..."
-  curl --output "${CIRROS_FILENAME}" -L "${CIRROS_URL}"
-fi
+download "$PRECISE_URL" "$PRECISE_FILENAME"&
+download "$CIRROS_URL" "$CIRROS_FILENAME"&
+download "$CHEF_SERVER_DEB_URL" "$CHEF_SERVER_DEB_FILENAME"&
+wait
 
 # download the installation disk if we haven't already or it is corrupted somehow
 if [ -e "$ISO_FILENAME" ]; then
@@ -177,6 +184,10 @@ else
     echo "cirros_url=\"$CIRROS_URL\"" >> ${FOLDER_ISO_CUSTOM_RPCS}/rpcs.cfg
 fi
 
+if [ -e ${CHEF_SERVER_DEB_FILENAME} ] && [ "${FLAVOR}" == "FULL" ]; then
+  echo "Embedding chef server deb."
+  cp "${CHEF_SERVER_DEB_FILENAME}" "${FOLDER_ISO_CUSTOM_RPCS}/resources/"
+fi
 
 # add some files
 echo "Add extra files ..."

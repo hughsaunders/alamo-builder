@@ -103,11 +103,8 @@ if [ $role = "Controller" ] || [ $role = "All-In-One" ]; then
     export CHEF_RMQ_PW="$(pwgen 16)"
     configure_rabbit_for_chef "$CHEF_RMQ_PW"
 
-    do_status 32 "Geting Chef Server configuration scripts"
-    get_chef_configuration_scripts
-
     do_status 35 "Installing Chef Server"
-    install_chef_server
+    install_chef_server $CHEF_RMQ_PW
 
     do_status 50 "Configuring Chef to use ext RabbitMQ"
     configure_chef_for_ext_rabbit "$CHEF_RMQ_PW"
