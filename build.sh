@@ -25,8 +25,8 @@ else
     MINORVER=${RELEASE}
 fi
 
-MAJORVER="2.0.0"
-CODENAME="zarn"
+MAJORVER="4.6.0"
+CODENAME="orb"
 
 if ! git diff-index --quiet HEAD; then
     if [ "${RELEASE:-}" != "" ]; then
