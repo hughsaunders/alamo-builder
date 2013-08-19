@@ -285,7 +285,6 @@ function wait_for_rabbit(){
 }
 
 function configure_rabbit_for_chef(){
-  CHEF_RMQ_PW="$1"
   vhost="/chef"
   user="chef"
   rabbitmqctl list_vhosts |grep -q $vhost \
@@ -295,10 +294,15 @@ function configure_rabbit_for_chef(){
     || rabbitmqctl add_user chef "$CHEF_RMQ_PW"
 
   rabbitmqctl set_permissions -p $vhost $user '.*' '.*' '.*'
+
+function test_rabbit_chef(){
+  amqping=/opt/rpcs/amqping.py
+  apt-get install -y python-pip
+  pip install pika
+  $amqping -u $user -v $vhost -p "$CHEF_RMQ_PW"
 }
 
 function install_chef_server(){
-  CHEF_RMQ_PW="$1"
   dpkg -l chef-server |grep -q ^ii \
     || dpkg -i /opt/rpcs/chef-server.deb
 

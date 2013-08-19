@@ -101,10 +101,13 @@ if [ $role = "Controller" ] || [ $role = "All-In-One" ]; then
 
     do_status 31 "Configuring RabbitMQ for chef"
     export CHEF_RMQ_PW="$(pwgen 16)"
-    configure_rabbit_for_chef "$CHEF_RMQ_PW"
+    configure_rabbit_for_chef 
+
+    do_status 33 "Test Chef RabbitMQ account"
+    test_rabbit_chef
 
     do_status 35 "Installing Chef Server"
-    install_chef_server $CHEF_RMQ_PW
+    install_chef_server
 
     do_status 51 "Setting up chef validation key distribution sevice"
     setup_chef_validation_key_distribution_service
