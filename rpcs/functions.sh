@@ -1,6 +1,6 @@
 date_string="%a, %d %b %Y %X %z"
 git_string=""
-knife=/opt/chef-server/bin/knife
+knife=/usr/bin/knife
 
 
 function pwgen() {
