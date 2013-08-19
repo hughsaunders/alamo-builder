@@ -106,9 +106,6 @@ if [ $role = "Controller" ] || [ $role = "All-In-One" ]; then
     do_status 35 "Installing Chef Server"
     install_chef_server $CHEF_RMQ_PW
 
-    do_status 50 "Configuring Chef to use ext RabbitMQ"
-    configure_chef_for_ext_rabbit "$CHEF_RMQ_PW"
-
     do_status 51 "Setting up chef validation key distribution sevice"
     setup_chef_validation_key_distribution_service
 
