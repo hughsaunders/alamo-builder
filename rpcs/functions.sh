@@ -291,7 +291,8 @@ function configure_rabbit_for_chef(){
     || rabbitmqctl add_vhost /chef
 
   rabbitmqctl list_users |grep -q $user \
-    || rabbitmqctl add_user chef "$CHEF_RMQ_PW"
+    && rabbitmqctl delete_user chef
+  add_user chef "$CHEF_RMQ_PW"
 
   rabbitmqctl set_permissions -p $vhost $user '.*' '.*' '.*'
 
