@@ -301,16 +301,9 @@ function install_chef_server(){
   CHEF_RMQ_PW="$1"
   dpkg -i /opt/rpcs/chef-server.deb
 
-  # Change rabbit password in chef JSON secrets file.
-  python <<EOP
-import json
-path="/etc/chef-server/chef-server-secrets.json"
-hash=json.load(open(path))
-hash["rabbitmq"]["password"]="$CHEF_RMQ_PW"
-open(path,"w").writelines(
-  json.dumps(hash,sort_keys=True,indent=4, separators=(",", ": "))
-)
-EOP
+  mkdir -p /etc/chef-server
+
+  #Initial chef-server config to disable rabbit.
 
   cat > /etc/chef-server/chef-server.rb <<EOF
 nginx["ssl_port"] = 4000
@@ -322,6 +315,20 @@ bookshelf['url'] = "https://#{node['ipaddress']}:4000"
 EOF
 
   # Run chef-solo to configure chef server
+  chef-server-ctl reconfigure
+
+  # Change rabbit password in chef JSON secrets file.
+  python <<EOP
+import json
+path="/etc/chef-server/chef-server-secrets.json"
+hash=json.load(open(path))
+hash["rabbitmq"]["password"]="$CHEF_RMQ_PW"
+open(path,"w").writelines(
+  json.dumps(hash,sort_keys=True,indent=4, separators=(",", ": "))
+)
+EOP
+
+  #re-run chef server config
   chef-server-ctl reconfigure
 }
 
