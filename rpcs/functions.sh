@@ -301,7 +301,7 @@ function test_rabbit_chef(){
   amqping=/opt/rpcs/amqping.py
   apt-get install -y python-pip
   pip install pika
-  python $amqping -u $user -v $vhost -p "$CHEF_RMQ_PW"
+  python $amqping -u chef -v chef -p "$CHEF_RMQ_PW"
 }
 
 function install_chef_server(){
