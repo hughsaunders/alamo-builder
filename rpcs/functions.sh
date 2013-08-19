@@ -286,9 +286,15 @@ function wait_for_rabbit(){
 
 function configure_rabbit_for_chef(){
   CHEF_RMQ_PW="$1"
-  rabbitmqctl add_vhost /chef
-  rabbitmqctl add_user chef $CHEF_RMQ_PW
-  rabbitmqctl set_permissions -p /chef chef '.*' '.*' '.*'
+  vhost="/chef"
+  user="chef"
+  rabbitmqctl list_vhosts |grep -q $vhost \
+    || rabbitmqctl add_vhost /chef
+
+  rabbitmqctl list_users |grep -q $user \
+    || rabbitmqctl add_user chef $CHEF_RMQ_PW
+
+  rabbitmqctl set_permissions -p $vhost $user '.*' '.*' '.*'
 }
 
 function install_chef_server(){
