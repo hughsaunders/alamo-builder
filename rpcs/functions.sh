@@ -295,6 +295,8 @@ function configure_rabbit_for_chef(){
 
   rabbitmqctl set_permissions -p $vhost $user '.*' '.*' '.*'
 
+}
+
 function test_rabbit_chef(){
   amqping=/opt/rpcs/amqping.py
   apt-get install -y python-pip
