@@ -43,8 +43,8 @@ GRUB_GFXPAYLOAD_LINUX=keep
 EOF
 update-grub
 
-#TODO(hughsaunders) re-enable this.
-#sed -i '/^exit/i /bin/bash /opt/rpcs/post-install.sh >> /var/log/post-install.log 2>&1 &' /etc/rc.local
+#TODO(hughsaunders) remove NOCLEAN=1
+sed -i '/^exit/i NOCLEAN=1 /bin/bash /opt/rpcs/post-install.sh >> /var/log/post-install.log 2>&1 &' /etc/rc.local
 
 cat > /etc/init/tty1.conf <<EOF
 # tty1 - getty
