@@ -432,7 +432,7 @@ function download_cookbooks {
     if [ ! -e /opt/rpcs/chef-cookbooks ]; then
         run_twice git ${git_string} clone http://github.com/rcbops/chef-cookbooks /opt/rpcs/chef-cookbooks 1>&9
         cd /opt/rpcs/chef-cookbooks
-        run_twice git ${git_string} checkout v4.1.0 1>&9
+        run_twice git ${git_string} checkout master 1>&9
 
         run_twice "initialize_submodules"
 
