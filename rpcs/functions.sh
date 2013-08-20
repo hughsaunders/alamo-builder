@@ -317,7 +317,7 @@ function test_rabbit_chef(){
 }
 
 function install_chef_server(){
-  dpkg -l chef-server |grep -q ^ii \
+  dpkg -l chef-server 2>/dev/null|grep -q ^ii \
     || dpkg -i /opt/rpcs/chef-server.deb
 
   mkdir -p /etc/chef-server
@@ -333,10 +333,8 @@ rabbitmq["password"] = "$CHEF_RMQ_PW"
 bookshelf['url'] = "https://#{node['ipaddress']}:4000"
 EOF
 
-  # Run chef-solo to configure chef server
-  chef-server-ctl reconfigure
+# Change rabbit password in chef JSON secrets file.
 
-  # Change rabbit password in chef JSON secrets file.
   python <<EOP
 import json
 path="/etc/chef-server/chef-server-secrets.json"
@@ -347,7 +345,7 @@ open(path,"w").writelines(
 )
 EOP
 
-  #re-run chef server config
+  # Run chef-solo to configure chef server
   chef-server-ctl reconfigure
 }
 
