@@ -347,6 +347,7 @@ open(path,"w").writelines(
 EOP
 
   # Run chef-solo to configure chef server
+  chef-server-ctl reconfigure ||:
   chef-server-ctl reconfigure
 }
 
