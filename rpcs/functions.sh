@@ -333,25 +333,18 @@ rabbitmq["password"] = "$CHEF_RMQ_PW"
 bookshelf['url'] = "https://#{node['ipaddress']}:4000"
 EOF
 
-cat >/etc/chef-server/chef-server-secrets.json <<EOF
-{
-  "rabbitmq": {
-    "password": "$CHEF_RMQ_PW"
-  }
-}
-EOF
-
+  chef-server-ctl reconfigure ||: #first run will fail
 # Change rabbit password in chef JSON secrets file.
 
-#  python <<EOP
-#import json
-#path="/etc/chef-server/chef-server-secrets.json"
-#hash=json.load(open(path))
-#hash["rabbitmq"]["password"]="$CHEF_RMQ_PW"
-#open(path,"w").writelines(
-#  json.dumps(hash,sort_keys=True,indent=4, separators=(",", ": "))
-#)
-#EOP
+  python <<EOP
+import json
+path="/etc/chef-server/chef-server-secrets.json"
+hash=json.load(open(path))
+hash["rabbitmq"]["password"]="$CHEF_RMQ_PW"
+open(path,"w").writelines(
+  json.dumps(hash,sort_keys=True,indent=4, separators=(",", ": "))
+)
+EOP
 
   # Run chef-solo to configure chef server
   chef-server-ctl reconfigure
