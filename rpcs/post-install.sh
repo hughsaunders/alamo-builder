@@ -99,8 +99,10 @@ if [ $role = "Controller" ] || [ $role = "All-In-One" ]; then
     do_status 30 "Waiting for RabbitMQ to come up"
     wait_for_rabbit
 
-    do_status 31 "Configuring RabbitMQ for chef"
-    export CHEF_RMQ_PW="$(pwgen 16)"
+    do_status 31 "Get RabbitMQ password for Chef User"
+    get_rabbit_chef_password
+
+    do_status 32 "Configuring RabbitMQ for chef"
     configure_rabbit_for_chef 
 
     do_status 33 "Test Chef RabbitMQ account"

@@ -284,6 +284,17 @@ function wait_for_rabbit(){
   port_test 30 20 localhost 5672
 }
 
+get_rabbit_chef_password(){
+  pw_file=/opt/rpcs/.CHEF_RMQ_PW
+  if [ -e $pw_file ];
+  then
+    export CHEF_RMQ_PW="$(cat $pw_file)"
+  else
+    export CHEF_RMQ_PW="$(pwgen 16)"
+    echo "$CHEF_RMQ_PW" >/opt/rpcs/.CHEF_RMQ_PW
+  fi
+}
+
 function configure_rabbit_for_chef(){
   vhost="/chef"
   user="chef"
