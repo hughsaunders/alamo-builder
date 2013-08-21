@@ -319,6 +319,9 @@ function test_rabbit_chef(){
 function install_chef_server(){
   echo "\$HOME=$HOME"
   [ -z $HOME ] && export HOME=/opt/chef-server/embedded
+
+  do_substatus 0 "Installing Chef Server Debian package"
+
   dpkg -l chef-server 2>/dev/null|grep -q ^ii \
     || dpkg -i /opt/rpcs/chef-server.deb
 
@@ -335,9 +338,11 @@ rabbitmq["password"] = "$CHEF_RMQ_PW"
 bookshelf['url'] = "https://#{node['ipaddress']}:4000"
 EOF
 
-  chef-server-ctl reconfigure ||: #first run will fail
-# Change rabbit password in chef JSON secrets file.
+  do_substatus 50 "Chef Server initial configuration"
 
+  chef-server-ctl reconfigure ||: #first run will fail
+
+  # Change rabbit password in chef JSON secrets file.
   python <<EOP
 import json
 path="/etc/chef-server/chef-server-secrets.json"
@@ -348,11 +353,15 @@ open(path,"w").writelines(
 )
 EOP
 
+  do_substatus 90 "Configuring Chef Server for external RabbitMQ"
+
   # Run chef-solo to configure chef server
   chef-server-ctl reconfigure ||:
   chef-server-ctl reconfigure
 
   export HOME=/root
+
+  do_substatus_close
 }
 
 function port_test() { # $1 delay, $2 max, $3 host, $4 port
