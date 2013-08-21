@@ -317,6 +317,8 @@ function test_rabbit_chef(){
 }
 
 function install_chef_server(){
+  echo "\$HOME=$HOME"
+  [ -z $HOME ] && export HOME=/opt/chef-server/embedded
   dpkg -l chef-server 2>/dev/null|grep -q ^ii \
     || dpkg -i /opt/rpcs/chef-server.deb
 
@@ -349,6 +351,8 @@ EOP
   # Run chef-solo to configure chef server
   chef-server-ctl reconfigure ||:
   chef-server-ctl reconfigure
+
+  export HOME=/root
 }
 
 function port_test() { # $1 delay, $2 max, $3 host, $4 port
